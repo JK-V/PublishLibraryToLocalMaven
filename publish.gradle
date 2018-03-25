@@ -1,0 +1,25 @@
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            groupId 'com.sdk.library'
+            artifactId project.getName()
+            version configuration.artifactVersion
+            artifact(bundleRelease)
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                configurations.implementation.allDependencies.each {
+                    if (it.group != null && it.name != null && it.version != null) {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', rootProject.name.equals(it.group) ? groupId : it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', "unspecified".equals(it.version) ? version : it.version)
+                    }
+                }
+            }
+        }
+    }
+}
+
+build.finalizedBy publishToMavenLocal
